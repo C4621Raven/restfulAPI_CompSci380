@@ -1,0 +1,8 @@
+com\schedule\client\service\ScheduleApiClient.class
+com\schedule\client\model\Course.class
+com\schedule\client\service\ApiException.class
+com\schedule\client\ui\ScheduleApp.class
+com\schedule\client\service\ScheduleApiClient$2.class
+com\schedule\client\model\TermInfo.class
+com\schedule\client\service\ScheduleApiClient$1.class
+com\schedule\client\model\CourseFilter.class
