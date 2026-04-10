@@ -29,7 +29,9 @@ import java.util.Map;
  */
 public class ScheduleApiClient implements Closeable {
 
-    private static final String BASE_URL = "http://localhost:5000/api";
+    private static final String BASE_URL = "http://0.0.0.0:5000/api"; //replace just localHost
+    //private static final String BASE_URL = "http://172.20.0.1:5000/api"; //replace just localHost
+
 
     private final CloseableHttpClient http;
     private final ObjectMapper mapper;
