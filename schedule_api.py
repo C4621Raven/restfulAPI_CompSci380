@@ -31,9 +31,22 @@ Requirements:
 import os
 import pandas as pd
 from flask import Flask, jsonify, request, abort
+import math, json
+from flask.json.provider import DefaultJSONProvider
 
 app = Flask(__name__)
+class NaNSafeJSONProvider(DefaultJSONProvider):
+    def dumps(self, obj, **kwargs):
+        return json.dumps(obj, default=self.default, **kwargs)
 
+    @staticmethod
+    def default(obj):
+        if isinstance(obj, float) and math.isnan(obj):
+            return None
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+app.json_provider_class = NaNSafeJSONProvider
+app.json = NaNSafeJSONProvider(app)
 # ── Data Loading ─────────────────────────────────────────────────────────────
 
 EXCEL_PATH = os.path.join(os.path.dirname(__file__), "Final_Draft_of_Schedule.xlsx")
@@ -65,7 +78,11 @@ df_global = load_data()
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def df_to_records(df: pd.DataFrame) -> list[dict]:
-    return df.to_dict(orient="records")
+    records = df.to_dict(orient="records")
+    return [
+        {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row.items()}
+        for row in records
+    ]
 
 def find_course(sec_name: str) -> pd.Series | None:
     matches = df_global[df_global["sec_name"].str.lower() == sec_name.lower()]
@@ -136,7 +153,8 @@ def get_course(sec_name: str):
     course = find_course(sec_name)
     if course is None:
         abort(404, f"Course '{sec_name}' not found")
-    return jsonify(course.to_dict())
+    course_dict = {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in course.to_dict().items()}
+    return jsonify(course_dict)
 
 
 @app.route("/api/courses", methods=["POST"])
@@ -215,4 +233,4 @@ def server_error(e):
 # ── Entry Point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    app.run(host = "0.0.0.0", debug=False, port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
